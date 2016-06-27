@@ -7,7 +7,7 @@
   height: 400px;
   margin-left: auto;
   margin-right: auto;
-  padding: 25px;
+  padding: 15px;
   border: 1px solid black;
   overflow: hidden;
 }
@@ -15,14 +15,14 @@
 .scroller-field {
   position: absolute;
   display: block;
-  width: 15px;
+  width: 17px;
   border: 1px solid red;
 }
 
 .scroller-arrows {
   position: absolute;
   display: block;
-  border: 10px solid black;
+  border: 1px solid black;
   background-color: black;
 }
 
