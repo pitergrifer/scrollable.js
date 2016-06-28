@@ -8,6 +8,9 @@ Object.prototype.scrollable = function(settings) {
   };
   var sliderClass = settings.sliderClass;
   var sliderHeight = settings.sliderHeight;
+  if (sliderHeight == "auto") {
+    var sliderHeightMin = settings.sliderHeightMin;
+  };
   var sliderShift = settings.sliderShift;
   
   // Функция добавления елементам основных свойств, так как в последующих операциях есть паттерн
@@ -76,17 +79,13 @@ Object.prototype.scrollable = function(settings) {
   if (sliderHeight == "auto") { // если высота ползунка "auto" (настройки объекта, а не CSS), то произвести расчет данной величины
     var selfWrapperRatio = self.clientHeight / ((wrapper.offsetHeight + selfPaddingTop * 2) / 100); // высчитываем процент
     sliderHeight = sliderFieldHeight / 100 * selfWrapperRatio; // высота в пикселях относительно процентов(selfWrapperRatio) из допустимой зоны хождения ползунка sliderFieldHeight 
-    if (arrows == true) { // если есть стрелки, то пересчитать высоту ползунка
-      sliderHeight = sliderHeight - arrowUp.offsetHeight;
-    };
-    if (sliderHeight < 10) { // установка минимальной высоты ползунка
-      sliderHeight = 10;
+    if (sliderHeight < sliderHeightMin) { // установка минимальной высоты ползунка
+      sliderHeight = sliderHeightMin;
     };
   };
   if (sliderHeight > sliderFieldHeight) { // установка максимальной высоты ползунка
     sliderHeight = sliderFieldHeight;
   };
-  console.log(sliderFieldHeight / sliderHeight);
   // позиционирование ползунка
   slider.style.height = sliderHeight + "px";
   slider.style.top = topEdge + "px";
@@ -102,25 +101,21 @@ Object.prototype.scrollable = function(settings) {
     function sliderScroll(event) {
       var sliderCoordsOld = slider.getBoundingClientRect(); // запомнить первоначальные координаты
       var newTop = event.clientY - scroller.getBoundingClientRect().top - scroller.clientTop - сorrectPick; // расчитать новый отступ сверху
-      
       if (arrows == true) { // определить крайную нижную точку прокрутки, в зависимости от наличия стрелок 
         var bottomEdge = sliderFieldHeight - slider.offsetHeight + arrowUp.offsetHeight;  
       } else {
         var bottomEdge = sliderFieldHeight - slider.offsetHeight;
       };
-      
       if (newTop <= topEdge) { // проверка на "вылет" за верхнюю границу 
         newTop = topEdge;
       } else if (newTop >= bottomEdge) { // проверка на вылет за нижнюю границу 
         newTop = bottomEdge;
       };
-      
       // позиционирование ползунка
       slider.style.top = newTop + "px";
-      
       // прокрутка видимой области (устанавливается через отступ сверху, так как .scrollBy(x,y) не принимает дробные значения)
       var sliderCoordsNew = slider.getBoundingClientRect(); // запомнить новые координаты ползунка
-      var ratioFactor = (wrapper.offsetHeight + selfPaddingTop * 2) / self.clientHeight; // коэффициент соотношения контейнера к обертке
+      var ratioFactor = ((wrapper.offsetHeight + selfPaddingTop * 2) - self.clientHeight) / (sliderFieldHeight - sliderHeight); // коэффициент-множитель скорости прокрутки
       var scrollSpeed = (sliderCoordsNew.top - sliderCoordsOld.top) * ratioFactor;
       var wrapperPositionOld = (wrapper.getBoundingClientRect().top - self.getBoundingClientRect().top) - selfPaddingTop;
       wrapper.style.top = wrapperPositionOld - scrollSpeed + "px";
@@ -139,6 +134,12 @@ Object.prototype.scrollable = function(settings) {
     
     return false;
   };
+  
+  self.onwheel = function(event) {
+    event = event || window.event;
+    
+    console.log(event);
+  };
 };
 
 var container = document.getElementById('container');
@@ -148,5 +149,6 @@ container.scrollable({
   arrowsClass: "scroller-arrows",
   sliderClass: "scroller-slider",
   sliderHeight: "auto",
+  sliderHeightMin: 30,
   sliderShift: true
 });
