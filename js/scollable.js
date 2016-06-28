@@ -12,6 +12,7 @@ Object.prototype.scrollable = function(settings) {
     var sliderHeightMin = settings.sliderHeightMin;
   };
   var sliderShift = settings.sliderShift;
+  var deltaMultipler = settings.deltaMultipler;
   
   // Функция добавления елементам основных свойств, так как в последующих операциях есть паттерн
   function makeByStandart(element, parent, position, className) {
@@ -91,6 +92,7 @@ Object.prototype.scrollable = function(settings) {
   slider.style.top = topEdge + "px";
   
   // Блок с событиями
+  // событие "перетаскивания" ползунка
   slider.onmousedown = function(event) {
     event = event || window.event;
     
@@ -101,10 +103,9 @@ Object.prototype.scrollable = function(settings) {
     function sliderScroll(event) {
       var sliderCoordsOld = slider.getBoundingClientRect(); // запомнить первоначальные координаты
       var newTop = event.clientY - scroller.getBoundingClientRect().top - scroller.clientTop - сorrectPick; // расчитать новый отступ сверху
+      var bottomEdge = sliderFieldHeight - sliderHeight;
       if (arrows == true) { // определить крайную нижную точку прокрутки, в зависимости от наличия стрелок 
-        var bottomEdge = sliderFieldHeight - slider.offsetHeight + arrowUp.offsetHeight;  
-      } else {
-        var bottomEdge = sliderFieldHeight - slider.offsetHeight;
+        bottomEdge += arrowUp.offsetHeight;  
       };
       if (newTop <= topEdge) { // проверка на "вылет" за верхнюю границу 
         newTop = topEdge;
@@ -135,11 +136,56 @@ Object.prototype.scrollable = function(settings) {
     return false;
   };
   
-  self.onwheel = function(event) {
+  // событие скроллинга посредством колесика мыши
+  function onwheelFixer(elem, func) { // полифил для корректной работы события "onwheel"
+    if (elem.addEventListener) {
+      if ('onwheel' in document) {
+        // IE9+, FF17+, Ch31+
+        elem.addEventListener("wheel", func);
+      } else if ('onmousewheel' in document) {
+        // устаревший вариант события
+        elem.addEventListener("mousewheel", func);
+      } else {
+        // Firefox < 17
+        elem.addEventListener("MozMousePixelScroll", func);
+      };
+    } else { // IE8-
+      elem.attachEvent("onmousewheel", func);
+    };
+  };
+  function wheelScroll(event) { // функция прокрутки колесиком мыши 
     event = event || window.event;
     
-    console.log(event);
+    var delta = event.deltaY || event.detail || event.wheelDelta;
+    
+    // прокрутка поля видимости
+    var oldWrapperTop = (wrapper.getBoundingClientRect().top - self.getBoundingClientRect().top) - selfPaddingTop;
+    var newWrapperTop = oldWrapperTop - (delta * deltaMultipler);
+    
+    // прокрутка ползунка
+    var sliderFactor = ((wrapper.offsetHeight + selfPaddingTop * 2) - self.clientHeight) / (sliderFieldHeight - sliderHeight);
+    var newSliderTop = (newWrapperTop / sliderFactor) * -1;
+    if (arrows == true) {
+      newSliderTop += arrowUp.offsetHeight;
+    };
+    
+    // проверка на вылет
+    var bottomEdge = sliderFieldHeight - sliderHeight;
+    if (arrows == true) {
+      bottomEdge += arrowUp.offsetHeight;
+    };
+    if (newSliderTop < topEdge) {
+      newSliderTop = topEdge;
+      newWrapperTop = oldWrapperTop;
+    } else if (newSliderTop > bottomEdge) {
+      newSliderTop = bottomEdge;
+      newWrapperTop = oldWrapperTop;
+    };
+    
+    wrapper.style.top = newWrapperTop + "px";
+    slider.style.top = newSliderTop + "px";
   };
+  onwheelFixer(self, wheelScroll);
 };
 
 var container = document.getElementById('container');
@@ -150,5 +196,6 @@ container.scrollable({
   sliderClass: "scroller-slider",
   sliderHeight: "auto",
   sliderHeightMin: 30,
-  sliderShift: true
+  sliderShift: true,
+  deltaMultipler: 4 //(рекомендутеся от 1 до 4, иначе появляются баги)
 });
