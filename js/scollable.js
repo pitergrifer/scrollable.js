@@ -47,17 +47,20 @@ Object.prototype.scrollable = function(settings) {
   // Создание полосы прокрутки
   var scroller = document.createElement('div');
   makeByStandart(scroller, self, "absolute", scrollerClass);
+  scroller.setAttribute('data-type', 'scroller'); // Установка атрибута "data-type" на некоторых элементах нужна для их использования в нескольких событиях ниже
   scroller.style.height = self.clientHeight + "px";
   scroller.style.top = "0";
   scroller.style.left = self.clientWidth - scroller.offsetWidth + "px";
   if (sliderShift == true) { // если смещение true, тогда увеличивать правый отступ контейнера на ширину панели прокрутки
     self.style.paddingRight = (self.clientWidth - wrapper.offsetWidth) / 2 + scroller.offsetWidth + "px";
-  }; 
+  };
   
   // Создание стрелок для полосы прокрутки
   if (arrows == true) { // если указано наличие стрелок - создавать их
   	var arrowUp = document.createElement('div');
     var arrowDown = document.createElement('div');
+    arrowUp.setAttribute('data-type', 'arrowUp');
+    arrowDown.setAttribute('data-type', 'arrowDown');
     var arrowsPack = [arrowUp, arrowDown]; // выборка стрелок в массив нужна для сокращения кода
     
     for (var arrowCounter = 0; arrowCounter < arrowsPack.length; arrowCounter++) {
@@ -79,6 +82,7 @@ Object.prototype.scrollable = function(settings) {
   // Создание ползунка
   var slider = document.createElement('div');
   makeByStandart(slider, scroller, "absolute", sliderClass);
+  slider.setAttribute('data-type', 'slider');
   slider.style.width = scroller.clientWidth + "px";
   if (sliderHeight == "auto") { // если высота ползунка "auto" (настройки объекта, а не CSS), то произвести расчет данной величины
     var selfWrapperRatio = self.clientHeight / ((wrapper.offsetHeight + selfPaddingTop * 2) / 100); // высчитываем процент
@@ -202,7 +206,7 @@ Object.prototype.scrollable = function(settings) {
   };
   onwheelFixer(self, wheelScroll);
   
-  // событие скроллинга посредством клавиатуры
+  // событие скроллинга посредством клавиатуры (обернуто в "focus" во избежание конфликтов со всей страницей и ее прокруткой, если такая имеется).
   self.onfocus = function() {
     self.onkeydown = function(event) {
       event = event || window.event;
@@ -232,6 +236,72 @@ Object.prototype.scrollable = function(settings) {
       };
     };
   };
+  
+  // событие скроллинга виртуальными стрелками и щелчками по полю хождения ползунка (используется делегирование)
+  var loops = { // объект-индикатор, показывающий статус функции непрерывного прокручивания (она оглашается ниже)
+    looper: undefined,
+    repeat: true 
+  };
+  scroller.onmousedown = function(event) {
+    event = event || window.event;
+    var target = event.target;
+    
+    function mouseGeneric(positivity, type) { // общий алгоритм для виртуальных стрелок и поля прокрутки
+      var scrollStep = stepMultipler * positivity;
+      if (type == "arrowUp" || type == "arrowDown") {
+        scrollStep = stepMultipler * positivity;
+      } else if (type == "scroller") {
+        scrollStep = self.clientHeight * positivity;
+      };
+      var result = scrollGeneric(event, scrollStep);
+      slider.style.top = result.newSliderTop + "px";
+      wrapper.style.top = result.newWrapperTop + "px";
+    };
+    
+    function loopedMouseGeneric(positivity, type) { // функция непрерывного прокручивания
+      var looper = setTimeout(function() {
+        function repeatAgain() {
+          if (loops.repeat == true) {
+            var repeater = setTimeout(function() {
+              mouseGeneric(positivity, type);
+              repeatAgain();
+            }, 50);
+          };
+        };
+        loops.repeat == true
+        repeatAgain();
+      }, 300);
+      return loops = {
+        looper: looper,
+        repeat: true
+      };
+    };
+    
+    if (target.getAttribute('data-type') == "arrowUp") { // событие по клику на стрелку "Вверх"
+      mouseGeneric(-1, "arrowUp");
+      loopedMouseGeneric(-1, "arrowUp");
+    } else if (target.getAttribute('data-type') == "arrowDown") { // событие по клику на стрелку "Вниз"
+      mouseGeneric(1, "arrowDown");
+      loopedMouseGeneric(1, "arrowDown");
+    } else if (target.getAttribute('data-type') == "scroller") { // событие по клику на пустую зону поля хождения ползунка
+      if (event.clientY < slider.getBoundingClientRect().top) {
+        mouseGeneric(-1, "scroller");
+        loopedMouseGeneric(-1, "scroller");
+      } else if (event.clientY > slider.getBoundingClientRect().bottom) {
+        mouseGeneric(1, "scroller");
+        loopedMouseGeneric(1, "scroller");
+      };
+    } else { // иначе сделать возврат 
+      return;
+    };
+  };
+  // если функция непрерывной прокрутки запущена - остановить ее 
+  scroller.onmouseup = function() {
+    if (loops.looper != undefined) {
+      clearTimeout(loops.looper);
+      loops.repeat = false;
+    };
+  };
 };
 
 var container = document.getElementById('container');
@@ -243,5 +313,5 @@ container.scrollable({
   sliderHeight: "auto",
   sliderHeightMin: 30,
   sliderShift: true,
-  stepMultipler: 5
+  stepMultipler: 10
 });
