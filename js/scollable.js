@@ -12,7 +12,10 @@ Object.prototype.scrollable = function(settings) {
     var sliderHeightMin = settings.sliderHeightMin;
   };
   var sliderShift = settings.sliderShift;
-  var deltaMultipler = settings.deltaMultipler;
+  var stepMultipler = settings.stepMultipler;
+  
+  // Установка tabindex на контейнере позволит взять его в фокус 
+  self.setAttribute('tabindex', '1');
   
   // Функция добавления елементам основных свойств, так как в последующих операциях есть паттерн
   function makeByStandart(element, parent, position, className) {
@@ -136,6 +139,39 @@ Object.prototype.scrollable = function(settings) {
     return false;
   };
   
+  // Функция прокрутки с общим алгоритмом для колесика, клавиатуры, виртуальных стрелок
+  function scrollGeneric(event, scrollStep) {
+    // прокрутка поля видимости
+    var oldWrapperTop = (wrapper.getBoundingClientRect().top - self.getBoundingClientRect().top) - selfPaddingTop;
+    var newWrapperTop = oldWrapperTop - scrollStep;
+    
+    // прокрутка ползунка
+    var sliderFactor = ((wrapper.offsetHeight + selfPaddingTop * 2) - self.clientHeight) / (sliderFieldHeight - sliderHeight);
+    var newSliderTop = (newWrapperTop / sliderFactor) * -1;
+    if (arrows == true) {
+      newSliderTop += arrowUp.offsetHeight;
+    };
+    
+    // проверка на вылет
+    var bottomEdge = sliderFieldHeight - sliderHeight;
+    if (arrows == true) {
+      bottomEdge += arrowUp.offsetHeight;
+    };
+    if (newSliderTop < topEdge) {
+      newSliderTop = topEdge;
+      newWrapperTop = 0;
+    } else if (newSliderTop > bottomEdge) {
+      newSliderTop = bottomEdge;
+      //newWrapperTop = self.clientHeight * -1 + selfPaddingTop * 1.5;
+      newWrapperTop = (wrapper.offsetHeight - self.clientHeight + selfPaddingTop * 2) * -1;
+    };
+    
+    return {
+      newSliderTop: newSliderTop,
+      newWrapperTop: newWrapperTop
+    };
+  };
+  
   // событие скроллинга посредством колесика мыши
   function onwheelFixer(elem, func) { // полифил для корректной работы события "onwheel"
     if (elem.addEventListener) {
@@ -153,39 +189,49 @@ Object.prototype.scrollable = function(settings) {
       elem.attachEvent("onmousewheel", func);
     };
   };
-  function wheelScroll(event) { // функция прокрутки колесиком мыши 
+  function wheelScroll(event) { // функция прокрутки колесиком мыши
     event = event || window.event;
     
     var delta = event.deltaY || event.detail || event.wheelDelta;
+    var scrollStep = delta * stepMultipler;
     
-    // прокрутка поля видимости
-    var oldWrapperTop = (wrapper.getBoundingClientRect().top - self.getBoundingClientRect().top) - selfPaddingTop;
-    var newWrapperTop = oldWrapperTop - (delta * deltaMultipler);
+    var result = scrollGeneric(event, scrollStep);
     
-    // прокрутка ползунка
-    var sliderFactor = ((wrapper.offsetHeight + selfPaddingTop * 2) - self.clientHeight) / (sliderFieldHeight - sliderHeight);
-    var newSliderTop = (newWrapperTop / sliderFactor) * -1;
-    if (arrows == true) {
-      newSliderTop += arrowUp.offsetHeight;
-    };
-    
-    // проверка на вылет
-    var bottomEdge = sliderFieldHeight - sliderHeight;
-    if (arrows == true) {
-      bottomEdge += arrowUp.offsetHeight;
-    };
-    if (newSliderTop < topEdge) {
-      newSliderTop = topEdge;
-      newWrapperTop = oldWrapperTop;
-    } else if (newSliderTop > bottomEdge) {
-      newSliderTop = bottomEdge;
-      newWrapperTop = oldWrapperTop;
-    };
-    
-    wrapper.style.top = newWrapperTop + "px";
-    slider.style.top = newSliderTop + "px";
+    wrapper.style.top = result.newWrapperTop + "px";
+    slider.style.top = result.newSliderTop + "px";
   };
   onwheelFixer(self, wheelScroll);
+  
+  // событие скроллинга посредством клавиатуры
+  self.onfocus = function() {
+    self.onkeydown = function(event) {
+      event = event || window.event;
+      
+      function keyboardScroll(event, arrowBtnCode, pageBtnCode, positivity) {
+        var scrollStep = 0;
+        if (event.keyCode == arrowBtnCode) {
+          scrollStep = stepMultipler * positivity;
+        } else if (event.keyCode == pageBtnCode) {
+          scrollStep = (self.clientHeight) * positivity;
+        };
+        
+        var result = scrollGeneric(event, scrollStep);
+        
+        wrapper.style.top = result.newWrapperTop + "px";
+        slider.style.top = result.newSliderTop + "px";
+      };
+      
+      // если нажаа клавиша "Вверх" или "Page Up"
+      if (event.keyCode == 38 || event.keyCode == 33) {
+        keyboardScroll(event, 38, 33, -1);
+      };
+      
+      // если нажата клавиша "Вниз" или "Page Down"
+      if (event.keyCode == 40 || event.keyCode == 34) {
+        keyboardScroll(event, 40, 34, 1);
+      };
+    };
+  };
 };
 
 var container = document.getElementById('container');
@@ -197,5 +243,5 @@ container.scrollable({
   sliderHeight: "auto",
   sliderHeightMin: 30,
   sliderShift: true,
-  deltaMultipler: 4 //(рекомендутеся от 1 до 4, иначе появляются баги)
+  stepMultipler: 5
 });
