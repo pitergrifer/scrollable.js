@@ -304,14 +304,15 @@ Object.prototype.scrollable = function(settings) {
   };
 };
 
+/* Использование */
 var container = document.getElementById('container');
 container.scrollable({
-  scrollerClass: "scroller-field",
-  arrows: true,
-  arrowsClass: "scroller-arrows",
-  sliderClass: "scroller-slider",
-  sliderHeight: "auto",
-  sliderHeightMin: 30,
-  sliderShift: true,
-  stepMultipler: 10
+  scrollerClass: "scroller-field", // css-класс скроллера
+  arrows: true, // наличие стрелок (флаги значения: "true", "false") 
+  arrowsClass: "scroller-arrows", // css-класс стрелок
+  sliderClass: "scroller-slider", // css-класс ползунка
+  sliderHeight: "auto", // высота ползунка ("auto" - расчитывается в зависимости от контента, число (без указания пикселей или процентов) - высота в пикселях)
+  sliderHeightMin: 30, // минимальная высота ползунка в пикселях (указывать еденицу измерения ненужно)
+  sliderShift: true, // наличие смещения контента для скроллера (флаги "true", false)
+  stepMultipler: 10 // скорость прокрутки 
 });
