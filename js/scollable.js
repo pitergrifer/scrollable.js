@@ -261,7 +261,7 @@ Object.prototype.scrollable = function(settings) {
     
     // событие скроллинга посредством выделения текста
     if (settings.scrollBySelection == true) {
-      wrapper.onmousedown = function(event) {
+      self.onmousedown = function(event) {
         event = event || window.event;
         
         function selectionScroll(event) {
