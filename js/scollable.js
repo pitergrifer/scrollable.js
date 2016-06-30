@@ -292,14 +292,9 @@ Object.prototype.scrollable = function(settings) {
         
         selectionScroll(event);
         
-        document.onmousemove = function(event) {
+        self.onmousemove = function(event) {
           selectionScroll(event);
         };
-        
-        document.onmouseup = function() {
-          document.onmousemove = null;
-          document.onmouseup = null;
-        }
       };
     };
     
