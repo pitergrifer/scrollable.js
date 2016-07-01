@@ -1,7 +1,10 @@
 
 scrollable.js by Bogdan Danileichenko (@piter_grifer)
 
-scrollable.js - it`s prototype for vanilla JavaScript object. New methood obj.scrollable() can generate custom scroll bar on HTML element. With scrollable.js you can use you own scrolle, which you can stylezed and customize the behavior to fit your needs and preferences
+scrollable.js - it`s prototype for vanilla JavaScript object.
+New methood obj.scrollable() can generate custom scroll bar on HTML element.
+With scrollable.js you can use you own scrolle, which you can stylezed and
+customize the behavior to fit your needs and preferences.
 
 Usege:
 1) First you need pick HTML element, which you want add a scroller (for example i use pick by ID):
