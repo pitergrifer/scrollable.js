@@ -31,6 +31,10 @@ Object.prototype.scrollable = function(settings) {
     };
     var sliderShift = settings.sliderShift;
     var stepMultipler = settings.stepMultipler;
+    if (settings.autoHide == true) {
+      var scrollerOpacityActive = settings.scrollerOpacityActive;
+      var scrollerOpacityPassive = settings.scrollerOpacityPassive;
+    };
     
     // Установка tabindex на контейнере позволит взять его в фокус 
     self.setAttribute('tabindex', '1');
@@ -151,14 +155,41 @@ Object.prototype.scrollable = function(settings) {
       
       document.onmousemove = function(event) {
         sliderScroll(event);
+        if (settings.autoHide == true) scroller.style.opacity = scrollerOpacityActive;
       };
       
       document.onmouseup = function() {
         document.onmousemove = null;
         document.onmouseup = null;
+        if (settings.autoHide == true) scroller.style.opacity = scrollerOpacityPassive;
       };
       
       return false;
+    };
+    
+    // Добавление эффекта исчезающей полосы прокрутки
+    if (settings.autoHide == true) {
+      var hideBy = undefined;
+      scroller.style.opacity = 0;
+      self.onmouseover = function(event) {
+        scroller.style.opacity = scrollerOpacityPassive;
+      };
+      self.onmouseout = function(event) {
+        scroller.style.opacity = 0;
+        if (hideBy != undefined) {
+          clearTimeout(hideBy);
+        };
+      };
+      function autoHideOnEvents() {
+        if (hideBy != undefined) {
+          clearTimeout(hideBy);
+        };
+        scroller.style.opacity = scrollerOpacityActive;
+        hideBy = setTimeout(function() {
+          scroller.style.opacity = scrollerOpacityPassive;
+        }, 1000);
+        return hideBy;
+      };
     };
     
     // Функция прокрутки с общим алгоритмом для колесика, клавиатуры, виртуальных стрелок
@@ -184,7 +215,6 @@ Object.prototype.scrollable = function(settings) {
         newWrapperTop = 0;
       } else if (newSliderTop > bottomEdge) {
         newSliderTop = bottomEdge;
-        //newWrapperTop = self.clientHeight * -1 + selfPaddingTop * 1.5;
         newWrapperTop = (wrapper.offsetHeight - self.clientHeight + selfPaddingTop * 2) * -1;
       };
       
@@ -220,6 +250,8 @@ Object.prototype.scrollable = function(settings) {
         
         var result = scrollGeneric(event, scrollStep);
         
+        if (settings.autoHide == true) autoHideOnEvents();
+        
         wrapper.style.top = result.newWrapperTop + "px";
         slider.style.top = result.newSliderTop + "px";
       };
@@ -227,7 +259,6 @@ Object.prototype.scrollable = function(settings) {
     };
     
     // событие скроллинга посредством клавиатуры (обернуто в "focus" во избежание конфликтов со всей страницей и ее прокруткой, если такая имеется).
-    if (settings.autoHide == true) var hideBy = undefined;
     if (settings.useKeyboardScroll == true) {
       self.onfocus = function() {
         self.onkeydown = function(event) {
@@ -243,19 +274,10 @@ Object.prototype.scrollable = function(settings) {
             
             var result = scrollGeneric(event, scrollStep);
             
+            if (settings.autoHide == true) autoHideOnEvents();
+            
             wrapper.style.top = result.newWrapperTop + "px";
             slider.style.top = result.newSliderTop + "px";
-            
-            if (settings.autoHide == true) {
-              if (hideBy != undefined) {
-                clearTimeout(hideBy);
-              };
-              scroller.style.opacity = 1;
-              hideBy = setTimeout(function() {
-                scroller.style.opacity = 0;
-              }, 1000);
-            };
-            return hideBy;
           };
           
           // если нажаа клавиша "Вверх" или "Page Up"
@@ -268,6 +290,9 @@ Object.prototype.scrollable = function(settings) {
             keyboardScroll(event, 40, 34, 1);
           };
         };
+      };
+      self.onblur = function() {
+        scroller.style.opacity = 0;
       };
     };
     
@@ -317,6 +342,7 @@ Object.prototype.scrollable = function(settings) {
         var result = scrollGeneric(event, scrollStep);
         slider.style.top = result.newSliderTop + "px";
         wrapper.style.top = result.newWrapperTop + "px";
+        if (settings.autoHide == true) autoHideOnEvents();
       };
       
       function loopedMouseGeneric(positivity, type) { // функция непрерывного прокручивания
@@ -363,17 +389,6 @@ Object.prototype.scrollable = function(settings) {
         loops.repeat = false;
       };
     };
-    
-    // добавление эффекта исчезающей полосы прокрутки
-    if (settings.autoHide == true) {
-      scroller.style.opacity = 0;
-      self.onmouseover = function(event) {
-        scroller.style.opacity = 1;
-      };
-      self.onmouseout = function(event) {
-        scroller.style.opacity = 0;
-      };
-    };
   };
   
   /* Проверка на тип устройства */
@@ -398,5 +413,7 @@ container.scrollable({
   scrollBySelection: true, // возможность прокрутки при выделении текста (флаги "true", "false")
   useWheelScroll: true, // возможность прокрутки колесиком мыши (флаги "true", "false")
   useKeyboardScroll: true, // возможность прокрутки клавишами "Стрелки", "PageUp" и "PageDown" (флаги "true", "false")
-  autoHide: true // наличие эффекта исчезающей полосы прокрутки (флаги "true", "false")
+  autoHide: true, // наличие эффекта исчезающей полосы прокрутки (флаги "true", "false")
+  scrollerOpacityActive: 1,
+  scrollerOpacityPassive: 0.4
 });
