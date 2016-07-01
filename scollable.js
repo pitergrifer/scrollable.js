@@ -1,24 +1,33 @@
+/*
+ * scrollable.js
+ *
+ * scrollable.js - it`s custom prototype for vanilla JavaScript object.
+ * Read README.txt form more information and information about usege.
+ *
+ * Bogdan Danileichenko (@piter_grifer)
+ */
+
 Object.prototype.scrollable = function(settings) {
-  /* Явное указание контейнера */ 
+  /* Pointer to object ("container" further) */
   var self = this;
   
-  /* Функция проверки типа устройства */
+  /* Function for detect type of device */
   function isMobile() {
     if (navigator.userAgent.match(/Android/ig) ||
         navigator.userAgent.match(/webOS/ig) ||
         navigator.userAgent.match(/iPhone/ig) ||
         navigator.userAgent.match(/iPod/ig) ||
         navigator.userAgent.match(/iPad/ig) ||
-        navigator.userAgent.match(/Blackberry/ig)) { // true - если мобильные устройства
+        navigator.userAgent.match(/Blackberry/ig)) { // true - if mobile device
       return true;  
-    } else { // false - если настольные
+    } else { // false - if desktop device
       return false;
     };
   };
   
-  /* Основная функция генерации полосы прокрутки */
+  /* Main function of generation scroller */
   function generateScroller() {
-    // Блок с настройками
+    // -- Block with main variables -- //
     var scrollerClass = settings.scrollerClass;
     var arrows = settings.arrows;
     if (arrows == true) {
@@ -36,10 +45,10 @@ Object.prototype.scrollable = function(settings) {
       var scrollerOpacityPassive = settings.scrollerOpacityPassive;
     };
     
-    // Установка tabindex на контейнере позволит взять его в фокус 
+    // -- Set attribute "tabindex" at container (it do event "onfocus" available) -- //
     self.setAttribute('tabindex', '1');
     
-    // Функция добавления елементам основных свойств, так как в последующих операциях есть паттерн
+    // -- Function of adding standart css propertys -- //
     function makeByStandart(element, parent, position, className) {
       parent.appendChild(element);
       if (className) {
@@ -57,117 +66,64 @@ Object.prototype.scrollable = function(settings) {
       element.style.overflow = "hidden";
     };
     
-    // Обертывание всего контента контейнера
+    // -- Wrap the whole content of the container in div "wrapper" -- //
     var content = self.innerHTML;
     self.innerHTML = "";
     var wrapper = document.createElement('div');
     makeByStandart(wrapper, self, "relative");
     wrapper.innerHTML = content;
-    // Определение внутрених отступов сверху
     var selfPaddingTop = wrapper.getBoundingClientRect().top - self.getBoundingClientRect().top;
     
-    // Создание полосы прокрутки
+    // -- Create a scroll bar -- //
     var scroller = document.createElement('div');
     makeByStandart(scroller, self, "absolute", scrollerClass);
-    scroller.setAttribute('data-type', 'scroller'); // Установка атрибута "data-type" на некоторых элементах нужна для их использования в нескольких событиях ниже
+    scroller.setAttribute('data-type', 'scroller');
     scroller.style.height = self.clientHeight + "px";
     scroller.style.top = "0";
     scroller.style.left = self.clientWidth - scroller.offsetWidth + "px";
-    if (sliderShift == true) { // если смещение true, тогда увеличивать правый отступ контейнера на ширину панели прокрутки
+    if (sliderShift == true) {
       self.style.paddingRight = (self.clientWidth - wrapper.offsetWidth) / 2 + scroller.offsetWidth + "px";
     };
     
-    // Создание стрелок для полосы прокрутки
-    if (arrows == true) { // если указано наличие стрелок - создавать их
+    // -- Create a arrows -- //
+    if (arrows == true) {
       var arrowUp = document.createElement('div');
       var arrowDown = document.createElement('div');
       arrowUp.setAttribute('data-type', 'arrowUp');
       arrowDown.setAttribute('data-type', 'arrowDown');
-      var arrowsPack = [arrowUp, arrowDown]; // выборка стрелок в массив нужна для сокращения кода
-      
+      var arrowsPack = [arrowUp, arrowDown];
       for (var arrowCounter = 0; arrowCounter < arrowsPack.length; arrowCounter++) {
         makeByStandart(arrowsPack[arrowCounter], scroller, "absolute", arrowsClass);
         arrowsPack[arrowCounter].style.width = scroller.clientWidth + "px";
         arrowsPack[arrowCounter].style.height = scroller.clientWidth + "px";
       };
       arrowDown.style.top = scroller.clientHeight - arrowDown.offsetHeight + "px";
-      
-      // вычисление начала свободной зоны для позиционирования ползунка
       var topEdge = arrowUp.offsetWidth;
-      // вычисление всей допустимой зоны хождения ползунка
       var sliderFieldHeight = scroller.clientHeight - (arrowUp.offsetHeight + arrowDown.offsetHeight);
-    } else { // если стрелок нет - провести другие расчеты
+    } else {
       var topEdge = 0;
       var sliderFieldHeight = scroller.clientHeight;
     };
     
-    // Создание ползунка
+    // -- Create a slider -- //
     var slider = document.createElement('div');
     makeByStandart(slider, scroller, "absolute", sliderClass);
     slider.setAttribute('data-type', 'slider');
     slider.style.width = scroller.clientWidth + "px";
-    if (sliderHeight == "auto") { // если высота ползунка "auto" (настройки объекта, а не CSS), то произвести расчет данной величины
-      var selfWrapperRatio = self.clientHeight / ((wrapper.offsetHeight + selfPaddingTop * 2) / 100); // высчитываем процент
-      sliderHeight = sliderFieldHeight / 100 * selfWrapperRatio; // высота в пикселях относительно процентов(selfWrapperRatio) из допустимой зоны хождения ползунка sliderFieldHeight 
-      if (sliderHeight < sliderHeightMin) { // установка минимальной высоты ползунка
+    if (sliderHeight == "auto") {
+      var selfWrapperRatio = self.clientHeight / ((wrapper.offsetHeight + selfPaddingTop * 2) / 100);
+      sliderHeight = sliderFieldHeight / 100 * selfWrapperRatio;
+      if (sliderHeight < sliderHeightMin) {
         sliderHeight = sliderHeightMin;
       };
     };
-    if (sliderHeight > sliderFieldHeight) { // установка максимальной высоты ползунка
+    if (sliderHeight > sliderFieldHeight) {
       sliderHeight = sliderFieldHeight;
     };
-    // позиционирование ползунка
     slider.style.height = sliderHeight + "px";
     slider.style.top = topEdge + "px";
     
-    // Блок с событиями
-    // событие "перетаскивания" ползунка
-    slider.onmousedown = function(event) {
-      event = event || window.event;
-      
-      // переменная для корректного расчета координат "захвата" ползунка курсором
-      var сorrectPick = event.clientY - slider.getBoundingClientRect().top;
-      
-      // Функция позиционирования ползунка. Используется в событиях mousedown и mousemove
-      function sliderScroll(event) {
-        var sliderCoordsOld = slider.getBoundingClientRect(); // запомнить первоначальные координаты
-        var newTop = event.clientY - scroller.getBoundingClientRect().top - scroller.clientTop - сorrectPick; // расчитать новый отступ сверху
-        var bottomEdge = sliderFieldHeight - sliderHeight;
-        if (arrows == true) { // определить крайную нижную точку прокрутки, в зависимости от наличия стрелок 
-          bottomEdge += arrowUp.offsetHeight;  
-        };
-        if (newTop <= topEdge) { // проверка на "вылет" за верхнюю границу 
-          newTop = topEdge;
-        } else if (newTop >= bottomEdge) { // проверка на вылет за нижнюю границу 
-          newTop = bottomEdge;
-        };
-        // позиционирование ползунка
-        slider.style.top = newTop + "px";
-        // прокрутка видимой области (устанавливается через отступ сверху, так как .scrollBy(x,y) не принимает дробные значения)
-        var sliderCoordsNew = slider.getBoundingClientRect(); // запомнить новые координаты ползунка
-        var ratioFactor = ((wrapper.offsetHeight + selfPaddingTop * 2) - self.clientHeight) / (sliderFieldHeight - sliderHeight); // коэффициент-множитель скорости прокрутки
-        var scrollSpeed = (sliderCoordsNew.top - sliderCoordsOld.top) * ratioFactor;
-        var wrapperPositionOld = (wrapper.getBoundingClientRect().top - self.getBoundingClientRect().top) - selfPaddingTop;
-        wrapper.style.top = wrapperPositionOld - scrollSpeed + "px";
-      };
-      
-      sliderScroll(event);
-      
-      document.onmousemove = function(event) {
-        sliderScroll(event);
-        if (settings.autoHide == true) scroller.style.opacity = scrollerOpacityActive;
-      };
-      
-      document.onmouseup = function() {
-        document.onmousemove = null;
-        document.onmouseup = null;
-        if (settings.autoHide == true) scroller.style.opacity = scrollerOpacityPassive;
-      };
-      
-      return false;
-    };
-    
-    // Добавление эффекта исчезающей полосы прокрутки
+    // -- Adding effect of hideable scroll bar -- //
     if (settings.autoHide == true) {
       var hideBy = undefined;
       scroller.style.opacity = 0;
@@ -192,20 +148,57 @@ Object.prototype.scrollable = function(settings) {
       };
     };
     
-    // Функция прокрутки с общим алгоритмом для колесика, клавиатуры, виртуальных стрелок
+    // -- Event "Drag'n Drop" for slider -- //
+    slider.onmousedown = function(event) {
+      event = event || window.event;
+      
+      var сorrectPick = event.clientY - slider.getBoundingClientRect().top;
+      
+      function sliderScroll(event) {
+        var sliderCoordsOld = slider.getBoundingClientRect();
+        var newTop = event.clientY - scroller.getBoundingClientRect().top - scroller.clientTop - сorrectPick;
+        var bottomEdge = sliderFieldHeight - sliderHeight;
+        if (arrows == true) {
+          bottomEdge += arrowUp.offsetHeight;  
+        };
+        if (newTop <= topEdge) {
+          newTop = topEdge;
+        } else if (newTop >= bottomEdge) {
+          newTop = bottomEdge;
+        };
+        slider.style.top = newTop + "px";
+        var sliderCoordsNew = slider.getBoundingClientRect();
+        var ratioFactor = ((wrapper.offsetHeight + selfPaddingTop * 2) - self.offsetHeight) / (sliderFieldHeight - sliderHeight);
+        var scrollSpeed = (sliderCoordsNew.top - sliderCoordsOld.top) * ratioFactor;
+        var wrapperPositionOld = (wrapper.getBoundingClientRect().top - self.getBoundingClientRect().top) - selfPaddingTop;
+        wrapper.style.top = wrapperPositionOld - scrollSpeed + "px";
+      };
+      
+      sliderScroll(event);
+      
+      document.onmousemove = function(event) {
+        sliderScroll(event);
+        if (settings.autoHide == true) scroller.style.opacity = scrollerOpacityActive;
+      };
+      
+      document.onmouseup = function() {
+        document.onmousemove = null;
+        document.onmouseup = null;
+        if (settings.autoHide == true) scroller.style.opacity = scrollerOpacityPassive;
+      };
+      
+      return false;
+    };
+    
+    // -- General function of scrolling action for mouse wheel, keyboard and virtual arrows -- //
     function scrollGeneric(event, scrollStep) {
-      // прокрутка поля видимости
       var oldWrapperTop = (wrapper.getBoundingClientRect().top - self.getBoundingClientRect().top) - selfPaddingTop;
       var newWrapperTop = oldWrapperTop - scrollStep;
-      
-      // прокрутка ползунка
-      var sliderFactor = ((wrapper.offsetHeight + selfPaddingTop * 2) - self.clientHeight) / (sliderFieldHeight - sliderHeight);
+      var sliderFactor = ((wrapper.offsetHeight + selfPaddingTop * 2) - self.offsetHeight) / (sliderFieldHeight - sliderHeight);
       var newSliderTop = (newWrapperTop / sliderFactor) * -1;
       if (arrows == true) {
         newSliderTop += arrowUp.offsetHeight;
       };
-      
-      // проверка на вылет
       var bottomEdge = sliderFieldHeight - sliderHeight;
       if (arrows == true) {
         bottomEdge += arrowUp.offsetHeight;
@@ -215,24 +208,24 @@ Object.prototype.scrollable = function(settings) {
         newWrapperTop = 0;
       } else if (newSliderTop > bottomEdge) {
         newSliderTop = bottomEdge;
-        newWrapperTop = (wrapper.offsetHeight - self.clientHeight + selfPaddingTop * 2) * -1;
+        newWrapperTop = (wrapper.offsetHeight - self.offsetHeight + selfPaddingTop * 2) * -1;
       };
-      
       return {
         newSliderTop: newSliderTop,
         newWrapperTop: newWrapperTop
       };
     };
     
-    // событие скроллинга посредством колесика мыши
+    // -- Event of scrolling by mouse wheel -- // событие скроллинга посредством колесика мыши
     if (settings.useWheelScroll == true) {
-      function onwheelFixer(elem, func) { // полифил для корректной работы события "onwheel"
+      // polyfill for event "onwheel"
+      function onwheelFixer(elem, func) {
         if (elem.addEventListener) {
           if ('onwheel' in document) {
             // IE9+, FF17+, Ch31+
             elem.addEventListener("wheel", func);
           } else if ('onmousewheel' in document) {
-            // устаревший вариант события
+            // old version of "onwheel"
             elem.addEventListener("mousewheel", func);
           } else {
             // Firefox < 17
@@ -242,23 +235,21 @@ Object.prototype.scrollable = function(settings) {
           elem.attachEvent("onmousewheel", func);
         };
       };
-      function wheelScroll(event) { // функция прокрутки колесиком мыши
+      // function of scrolling by mouse wheel
+      function wheelScroll(event) {
         event = event || window.event;
-        
         var delta = event.deltaY || event.detail || event.wheelDelta;
         var scrollStep = delta * stepMultipler;
-        
         var result = scrollGeneric(event, scrollStep);
-        
         if (settings.autoHide == true) autoHideOnEvents();
-        
         wrapper.style.top = result.newWrapperTop + "px";
         slider.style.top = result.newSliderTop + "px";
       };
+      // set event listener
       onwheelFixer(self, wheelScroll);
     };
     
-    // событие скроллинга посредством клавиатуры (обернуто в "focus" во избежание конфликтов со всей страницей и ее прокруткой, если такая имеется).
+    // -- Event of scrolling by keyboard (wrap event "onkeyboard" in "onfocus" to avoid conflict with native scroller) -- //
     if (settings.useKeyboardScroll == true) {
       self.onfocus = function() {
         self.onkeydown = function(event) {
@@ -271,21 +262,18 @@ Object.prototype.scrollable = function(settings) {
             } else if (event.keyCode == pageBtnCode) {
               scrollStep = (self.clientHeight) * positivity;
             };
-            
             var result = scrollGeneric(event, scrollStep);
-            
             if (settings.autoHide == true) autoHideOnEvents();
-            
             wrapper.style.top = result.newWrapperTop + "px";
             slider.style.top = result.newSliderTop + "px";
           };
           
-          // если нажаа клавиша "Вверх" или "Page Up"
+          // condition for bottons "Arrow up" and "Page Down"
           if (event.keyCode == 38 || event.keyCode == 33) {
             keyboardScroll(event, 38, 33, -1);
           };
           
-          // если нажата клавиша "Вниз" или "Page Down"
+          // condition for bottons "Arrow down" and "Page Up"
           if (event.keyCode == 40 || event.keyCode == 34) {
             keyboardScroll(event, 40, 34, 1);
           };
@@ -296,7 +284,7 @@ Object.prototype.scrollable = function(settings) {
       };
     };
     
-    // событие скроллинга посредством выделения текста
+    // -- Event of scrolling by text selection -- //
     if (settings.scrollBySelection == true) {
       self.onmousedown = function(event) {
         event = event || window.event;
@@ -308,9 +296,7 @@ Object.prototype.scrollable = function(settings) {
           } else if (event.clientY > self.getBoundingClientRect().bottom) {
             scrollStep = stepMultipler;
           };
-          
           var result = scrollGeneric(event, scrollStep);
-          
           wrapper.style.top = result.newWrapperTop + "px";
           slider.style.top = result.newSliderTop + "px";
         };
@@ -323,8 +309,8 @@ Object.prototype.scrollable = function(settings) {
       };
     };
     
-    // событие скроллинга виртуальными стрелками и щелчками по полю хождения ползунка (используется делегирование)
-    var loops = { // объект-индикатор, показывающий статус функции непрерывного прокручивания (она оглашается ниже)
+    // -- Event of scrolling by click on virtual arrows and empty scroller field (using delegation) -- //
+    var loops = {
       looper: undefined,
       repeat: true 
     };
@@ -332,7 +318,7 @@ Object.prototype.scrollable = function(settings) {
       event = event || window.event;
       var target = event.target;
       
-      function mouseGeneric(positivity, type) { // общий алгоритм для виртуальных стрелок и поля прокрутки
+      function mouseGeneric(positivity, type) {
         var scrollStep = stepMultipler * positivity;
         if (type == "arrowUp" || type == "arrowDown") {
           scrollStep = stepMultipler * positivity;
@@ -345,7 +331,7 @@ Object.prototype.scrollable = function(settings) {
         if (settings.autoHide == true) autoHideOnEvents();
       };
       
-      function loopedMouseGeneric(positivity, type) { // функция непрерывного прокручивания
+      function loopedMouseGeneric(positivity, type) {
         var looper = setTimeout(function() {
           function repeatAgain() {
             if (loops.repeat == true) {
@@ -364,13 +350,13 @@ Object.prototype.scrollable = function(settings) {
         };
       };
       
-      if (target.getAttribute('data-type') == "arrowUp") { // событие по клику на стрелку "Вверх"
+      if (target.getAttribute('data-type') == "arrowUp") { // condition for click on vitrual arrow up
         mouseGeneric(-1, "arrowUp");
         loopedMouseGeneric(-1, "arrowUp");
-      } else if (target.getAttribute('data-type') == "arrowDown") { // событие по клику на стрелку "Вниз"
+      } else if (target.getAttribute('data-type') == "arrowDown") { // condition for click on virtual arrow down
         mouseGeneric(1, "arrowDown");
         loopedMouseGeneric(1, "arrowDown");
-      } else if (target.getAttribute('data-type') == "scroller") { // событие по клику на пустую зону поля хождения ползунка
+      } else if (target.getAttribute('data-type') == "scroller") { // condition for click on empty field of scroll bar
         if (event.clientY < slider.getBoundingClientRect().top) {
           mouseGeneric(-1, "scroller");
           loopedMouseGeneric(-1, "scroller");
@@ -378,11 +364,11 @@ Object.prototype.scrollable = function(settings) {
           mouseGeneric(1, "scroller");
           loopedMouseGeneric(1, "scroller");
         };
-      } else { // иначе сделать возврат 
+      } else {
         return;
       };
     };
-    // если функция непрерывной прокрутки запущена - остановить ее по отжатию клавиши мыши
+    // Stop scrolling function if it run
     scroller.onmouseup = function() {
       if (loops.looper != undefined) {
         clearTimeout(loops.looper);
@@ -391,29 +377,10 @@ Object.prototype.scrollable = function(settings) {
     };
   };
   
-  /* Проверка на тип устройства */
+  /* Check type of device */
   if(isMobile() == true) {
     self.style.overflowY = "scroll";
   } else {
     generateScroller();
   };
 };
-
-/* Использование */
-var container = document.getElementById('container');
-container.scrollable({
-  scrollerClass: "scroller-field", // css-класс скроллера
-  arrows: true, // наличие стрелок (флаги значения: "true", "false") 
-  arrowsClass: "scroller-arrows", // css-класс стрелок
-  sliderClass: "scroller-slider", // css-класс ползунка
-  sliderHeight: "auto", // высота ползунка ("auto" - расчитывается в зависимости от контента; число (без указания пикселей или процентов) - высота в пикселях)
-  sliderHeightMin: 30, // минимальная высота ползунка в пикселях (указывать еденицу измерения ненужно)
-  sliderShift: true, // наличие смещения контента для скроллера (флаги "true", "false")
-  stepMultipler: 10, // скорость прокрутки
-  scrollBySelection: true, // возможность прокрутки при выделении текста (флаги "true", "false")
-  useWheelScroll: true, // возможность прокрутки колесиком мыши (флаги "true", "false")
-  useKeyboardScroll: true, // возможность прокрутки клавишами "Стрелки", "PageUp" и "PageDown" (флаги "true", "false")
-  autoHide: true, // наличие эффекта исчезающей полосы прокрутки (флаги "true", "false")
-  scrollerOpacityActive: 1,
-  scrollerOpacityPassive: 0.4
-});
