@@ -6,7 +6,6 @@
  *
  * Bogdan Danileichenko (@piter_grifer)
  */
-
 Object.prototype.scrollable = function(settings) {
   /* Pointer to object ("container" further) */
   var self = this;
@@ -303,9 +302,10 @@ Object.prototype.scrollable = function(settings) {
         
         selectionScroll(event);
         
-        self.onmousemove = function(event) {
-          selectionScroll(event);
-        };
+        document.addEventListener('mousemove', selectionScroll);
+        document.addEventListener('mouseup', function(event) {
+          document.removeEventListener('mousemove', selectionScroll);
+        });
       };
     };
     
@@ -341,8 +341,12 @@ Object.prototype.scrollable = function(settings) {
               }, 50);
             };
           };
-          loops.repeat == true
-          repeatAgain();
+          if ((event.clientY >= slider.getBoundingClientRect().top) && (event.clientY <= slider.getBoundingClientRect().bottom)) {
+            loops.repeat == false;
+          } else {
+            loops.repeat == true;
+            repeatAgain();
+          };
         }, 300);
         return loops = {
           looper: looper,
