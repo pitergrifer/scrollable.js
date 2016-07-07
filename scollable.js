@@ -8,14 +8,15 @@
  */
 
 Element.prototype.scrollable = function(settings) {
+  // -- Polyfill for add/remove events listeners -- //
   function eventListener(action, element, type, func) {
-    if (action == 'add') {
-      if (document.addEventListener) {
+    if (action == 'add') { // add event listener
+      if (document.addEventListener) { // if it good browser 
       element.addEventListener(type, func);
-      } else {
+      } else { // if it retardet IE8 or later
         element.attachEvent('on' + type, func);
       };
-    } else if (action == "remove") {
+    } else if (action == "remove") { // remove event listener
         if (document.removeEventListener) {
         element.removeEventListener(type, func);
       } else {
@@ -24,6 +25,11 @@ Element.prototype.scrollable = function(settings) {
     } else {
       console.error("Wrong usege of function \"eventListener\"");
     };
+  };
+  
+  // -- Polyfill for get css-style -- //
+  function getStyle(elem) {
+    return window.getComputedStyle ? getComputedStyle(elem, "") : elem.currentStyle;
   };
   
   /* Pointer to object ("container" further) */
@@ -105,6 +111,7 @@ Element.prototype.scrollable = function(settings) {
     if (sliderShift == true) {
       self.style.paddingRight = (self.clientWidth - wrapper.offsetWidth) / 2 + scroller.offsetWidth + "px";
     };
+    scroller.style.zIndex = 5;
     
     // -- Create a arrows -- //
     if (arrows == true) {
@@ -146,13 +153,34 @@ Element.prototype.scrollable = function(settings) {
     
     // -- Adding effect of hideable scroll bar -- //
     if (settings.autoHide == true) {
-      var hideBy = undefined;
-      scroller.style.opacity = 0;
-      self.onmouseover = function(event) {
-        scroller.style.opacity = scrollerOpacityPassive;
+      function adaptiveHide(element, value) {
+        element.style.MsFilter = "\"progid:DXImageTransform.Microsoft.Alpha(Opacity=" + (value * 100) + ")\"";
+        element.style.filter = "alpha(opacity=" + (value * 100) + ")";
+        element.style.MozOpacity = value;
+        element.style.KhtmlOpacity = value;
+        element.style.opacity = value;
       };
-      self.onmouseout = function(event) {
-        scroller.style.opacity = 0;
+      if (navigator.userAgent.match(/MSIE 8.0/ig)) {
+        if (getStyle(scroller).backgroundColor == "transparent") {
+          var parentBackground = getStyle(self).backgroundColor;
+          if (parentBackground != "transparent") {
+            scroller.style.backgroundColor = parentBackground;
+          } else {
+            scroller.style.backgroundColor = "white";
+          };
+        };
+      };
+      var hideBy = undefined;
+      adaptiveHide(scroller, 0);
+      self.onmouseenter = function(event) {
+        //console.log("in");
+        adaptiveHide(scroller, scrollerOpacityPassive);
+      };
+      self.onmouseleave = function(event) {
+        event = event || window.event;
+        var target = event.target || event.srcElement;
+        //console.log("out");
+        adaptiveHide(scroller, 0);
         if (hideBy != undefined) {
           clearTimeout(hideBy);
         };
@@ -161,9 +189,9 @@ Element.prototype.scrollable = function(settings) {
         if (hideBy != undefined) {
           clearTimeout(hideBy);
         };
-        scroller.style.opacity = scrollerOpacityActive;
+        adaptiveHide(scroller, scrollerOpacityActive);
         hideBy = setTimeout(function() {
-          scroller.style.opacity = scrollerOpacityPassive;
+          adaptiveHide(scroller, scrollerOpacityPassive);
         }, 1000);
         return hideBy;
       };
@@ -193,6 +221,13 @@ Element.prototype.scrollable = function(settings) {
         var scrollSpeed = (sliderCoordsNew.top - sliderCoordsOld.top) * ratioFactor;
         var wrapperPositionOld = (wrapper.getBoundingClientRect().top - self.getBoundingClientRect().top) - selfPaddingTop;
         wrapper.style.top = wrapperPositionOld - scrollSpeed + "px";
+        
+        if (settings.autoHide == true) adaptiveHide(scroller, scrollerOpacityActive);
+        
+        document.onselectstart = function(event) {
+          event = event || window.event;
+          return false;
+        };
       };
       
       sliderScroll(event);
@@ -200,13 +235,13 @@ Element.prototype.scrollable = function(settings) {
       document.onmousemove = function(event) {
         event = event || window.event
         sliderScroll(event);
-        if (settings.autoHide == true) scroller.style.opacity = scrollerOpacityActive;
       };
       
       document.onmouseup = function() {
         document.onmousemove = null;
         document.onmouseup = null;
-        if (settings.autoHide == true) scroller.style.opacity = scrollerOpacityPassive;
+        document.onselectstart = null;
+        if (settings.autoHide == true) adaptiveHide(scroller, scrollerOpacityPassive);
       };
       
       return false;
@@ -238,7 +273,7 @@ Element.prototype.scrollable = function(settings) {
       };
     };
     
-    // -- Event of scrolling by mouse wheel -- // событие скроллинга посредством колесика мыши
+    // -- Event of scrolling by mouse wheel -- //
     if (settings.useWheelScroll == true) {
       // polyfill for event "onwheel"
       function onwheelFixer(elem, func) {
@@ -261,7 +296,12 @@ Element.prototype.scrollable = function(settings) {
       function wheelScroll(event) {
         event = event || window.event;
         var delta = event.deltaY || event.detail || event.wheelDelta;
-        var scrollStep = delta * stepMultipler;
+        var scrollStep;
+        if (delta > 0) {
+          scrollStep = stepMultipler;
+        } else if (delta < 0) {
+          scrollStep = stepMultipler * -1;
+        };
         var result = scrollGeneric(event, scrollStep);
         if (settings.autoHide == true) autoHideOnEvents();
         wrapper.style.top = result.newWrapperTop + "px";
@@ -273,7 +313,7 @@ Element.prototype.scrollable = function(settings) {
     
     // -- Event of scrolling by keyboard (wrap event "onkeyboard" in "onfocus" to avoid conflict with native scroller) -- //
     if (settings.useKeyboardScroll == true) {
-      self.onfocus = function() {
+      self.onfocus = function(event) {
         self.onkeydown = function(event) {
           event = event || window.event;
           
@@ -300,9 +340,6 @@ Element.prototype.scrollable = function(settings) {
             keyboardScroll(event, 40, 34, 1);
           };
         };
-      };
-      self.onblur = function() {
-        scroller.style.opacity = 0;
       };
     };
     
@@ -343,13 +380,6 @@ Element.prototype.scrollable = function(settings) {
     scroller.onmousedown = function(event) {
       event = event || window.event;
       var target = event.target || event.srcElement;
-      
-      var clickPlace;
-      if (event.clientY > slider.getBoundingClientRect().bottom) {
-        clickPlace = "bottom";
-      } else if (event.clientY < slider.getBoundingClientRect().top) {
-        clickPlace = "top";
-      };
       
       function mouseGeneric(positivity, type) {
         var scrollStep = stepMultipler * positivity;
