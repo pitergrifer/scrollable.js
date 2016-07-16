@@ -2,7 +2,7 @@
  * scrollable.js
  *
  * scrollable.js - it`s custom prototype for vanilla JavaScript object.
- * Read README.txt form more information and information about usege.
+ * Read README.md for more information and information about usege.
  *
  * Bogdan Danileichenko (@piter_grifer)
  */
