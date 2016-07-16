@@ -3,7 +3,7 @@
 
 ## About
 scrollable.js - its prototype for JavaScript object.
-New methood obj.scrollable() can generate custom scroll bar on HTML element.
+New methood obj.scrollable() can generate custom scrollbar on HTML element.
 With scrollable.js you can use you own scrolle, which you can stylezed and
 customize the behavior to fit your needs and preferences.
 
