@@ -339,14 +339,14 @@ Element.prototype.scrollable = function(settings) {
             clearTimeout(hideBy);
           };
           adaptiveHide(scroller, scrollerOpacityActive);
-          adaptiveHide(plug, scrollerOpacityActive);
+          if (horizontalScrolling == true) adaptiveHide(plug, scrollerOpacityActive);
           hideBy = setTimeout(function() {
             if (mousePosition == 'inside') {
               adaptiveHide(scroller, scrollerOpacityPassive);
-              adaptiveHide(plug, scrollerOpacityPassive);
+              if (horizontalScrolling == true) adaptiveHide(plug, scrollerOpacityPassive);
             } else if (mousePosition == 'outside') {
               adaptiveHide(scroller, scrollerOpacityHidden);
-              adaptiveHide(plug, scrollerOpacityHidden);
+              if (horizontalScrolling == true) adaptiveHide(plug, scrollerOpacityHidden);
             };
           }, 1000);
         };
@@ -394,7 +394,7 @@ Element.prototype.scrollable = function(settings) {
               adaptiveHide(plug, scrollerOpacityPassive);
             } else if (axis == "Y") {
               adaptiveHide(scroller, scrollerOpacityPassive);
-              adaptiveHide(plug, scrollerOpacityPassive);  
+              if (horizontalScrolling == true) adaptiveHide(plug, scrollerOpacityPassive);  
             };
           } else if (mousePosition == 'outside') {
             if (axis == "X") {
@@ -402,7 +402,7 @@ Element.prototype.scrollable = function(settings) {
               adaptiveHide(plug, scrollerOpacityHidden);
             } else if (axis == "Y") {
               adaptiveHide(scroller, scrollerOpacityHidden);
-              adaptiveHide(plug, scrollerOpacityHidden);
+              if (horizontalScrolling == true) adaptiveHide(plug, scrollerOpacityHidden);
             };
           };
         };
@@ -438,7 +438,7 @@ Element.prototype.scrollable = function(settings) {
         wrapper.style.top = Math.round(sliderPick.wrapperY) + "px";
         if (settings.autoHide == true) {
           adaptiveHide(scroller, scrollerOpacityActive);
-          adaptiveHide(plug, scrollerOpacityActive);
+          if (horizontalScrolling == true) adaptiveHide(plug, scrollerOpacityActive);
         };
         return sliderPick = {
           slider: true,
