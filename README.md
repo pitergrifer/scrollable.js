@@ -118,7 +118,7 @@ customize the behavior to fit your needs and preferences.
 <li><strong>"useWheelScroll"</strong> - ability to scroll by mouse wheel. Flags: "true", "false". Necessary setting;</li>
 <li><strong>"useKeyboardScroll"</strong> - ability to scroll by keyboard buttons as "Arrows", "PageUp", "PageDown", "Home" and "End". Flags: "true", "false". Necessary setting;</li>
 <li><strong>"dynamicContent"</strong> - this option configurate slider size and some calculation, if content has variable filling (like in case of infinity scrolling). Flags: "true", "false". Necessary setting;</li>
-<li><strong>"contentResize"</strong> - if content width larger, then container, this option shrink this type of content, and delete horizontal scrollbar. Flags: "true", "false". Necessary setting;</li>
+<li><strong>"contentResize"</strong> - if content width larger, then container, this option shrink this type of content, and delete horizontal scrollbar (if it allowed). Flags: "true", "false". Necessary setting;</li>
 <li><strong>"autoHide"</strong> - existence of visual effect of hideable scroller. Flags: "true", "false". Necessary setting;</li>
 <li><strong>"scrollerOpacityActive"</strong> - value opacity for active scroller. Flag: number. Not necessary setting, if you don't use auto hide effect;</li>
 <li><strong>"scrollerOpacityPassive"</strong> - value opacity for passive scroller. Flag: number. Not necessary setting, if you don't use auto hide effect;</li>
