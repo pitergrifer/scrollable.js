@@ -2,7 +2,7 @@
  * scrollable.js
  *
  * scrollable.js - it`s custom prototype for vanilla JavaScript object.
- * Read README.md for more information and information about usege.
+ * Read README.txt form more information and information about usege.
  *
  * Bogdan Danileichenko (@piter_grifer)
  */
@@ -60,6 +60,7 @@ Element.prototype.scrollable = function(settings) {
     };
     var sliderClass = settings.sliderClass;
     var sliderHeight = settings.sliderHeight;
+    var sliderStarterHeight = sliderHeight;
     if (sliderHeight == "auto") {
       var sliderHeightMin = settings.sliderHeightMin;
     };
@@ -74,6 +75,7 @@ Element.prototype.scrollable = function(settings) {
     if (horizontalScrolling == "auto" || horizontalScrolling == true) {
       var scrollerXClass = settings.scrollerXClass;
       var sliderWidth = sliderHeight;
+      var sliderStarterWidth = sliderWidth;
     };
     
     // -- Set attribute "tabindex" at container (it do event "onfocus" available) -- //
@@ -99,35 +101,73 @@ Element.prototype.scrollable = function(settings) {
       element.style.overflow = "hidden";
     };
     
+    // -- Function for set effect of smoothly scrolling -- //
+    function smoothly(action, element) {
+      if (settings.smoothlyScroll == true) {
+        if (action == "set") {
+          element.style.MozTransition = settings.smoothlyScrollOptions;
+          element.style.OTransition = settings.smoothlyScrollOptions;
+          element.style.WebkitTransition = settings.smoothlyScrollOptions;
+          element.style.transition = settings.smoothlyScrollOptions;
+        } else if (action == "remove") {
+          element.style.MozTransition = "none";
+          element.style.OTransition = "none";
+          element.style.WebkitTransition = "none";
+          element.style.transition = "none";
+        };
+      };
+    };
+    
     // -- Wrap the whole content of the container in div "wrapper" -- //
     var content = self.innerHTML;
     self.innerHTML = "";
     var wrapper = document.createElement('div');
     makeByStandart(wrapper, self, "relative");
+    smoothly("set", wrapper);
     wrapper.setAttribute('data-type', 'wrapper');
     wrapper.innerHTML = content;
-    if (horizontalScrolling == "auto" || horizontalScrolling == true) {
-      var wrappedContent = wrapper.children;
-      var wrappedContentLength = wrappedContent.length;
-      var contentMaxWidth = wrappedContent[0].offsetWidth;
-      for (var wrapperCounter = 1; wrapperCounter < wrappedContentLength; wrapperCounter++) {
-        if (wrappedContent[wrapperCounter].offsetWidth > contentMaxWidth) {
-          contentMaxWidth = wrappedContent[wrapperCounter].offsetWidth;
+    if (settings.contentResize == true) {
+      function fixContent() {
+        var wrappedContent = wrapper.children;
+        var wrappedContentLength = wrappedContent.length;
+        for (var wrapperCounter = 1; wrapperCounter < wrappedContentLength; wrapperCounter++) {
+          if (wrappedContent[wrapperCounter].offsetWidth > wrapper.offsetWidth) {
+            wrappedContent[wrapperCounter].style.width = wrapper.offsetWidth + "px";
+          };
         };
       };
-      if (contentMaxWidth > wrapper.offsetWidth) {
-        horizontalScrolling = true;
-        wrapper.style.width = contentMaxWidth + "px";
-      } else {
-        horizontalScrolling = false;
-      };
+      horizontalScrolling = false;
     };
+    if (horizontalScrolling == "auto" || horizontalScrolling == true) {
+      function setWrapperWidth() { 
+        var wrappedContent = wrapper.children;
+        var wrappedContentLength = wrappedContent.length;
+        var contentMaxWidth = wrappedContent[0].offsetWidth;
+        for (var wrapperCounter = 1; wrapperCounter < wrappedContentLength; wrapperCounter++) {
+          if (wrappedContent[wrapperCounter].offsetWidth > contentMaxWidth) {
+            contentMaxWidth = wrappedContent[wrapperCounter].offsetWidth;
+          };
+        };
+        if (contentMaxWidth > wrapper.offsetWidth) {
+          horizontalScrolling = true;
+          wrapper.style.width = contentMaxWidth + "px";
+        } else {
+          horizontalScrolling = false;
+        };
+      };
+      setWrapperWidth();
+    };
+    var wrapperHeight = parseInt(getStyle(wrapper).height);
+    var wrapperWidth = parseInt(getStyle(wrapper).width);
+    
+    // -- Get borders and paddings for future calculations -- //
     var selfBorder = {
       top: parseInt(getStyle(self).borderTopWidth),
       bottom: parseInt(getStyle(self).borderBottomWidth),
       left: parseInt(getStyle(self).borderLeftWidth),
       right: parseInt(getStyle(self).borderRightWidth)
     };
+    // Fallow paddings consider borders
     var selfPaddingTop = wrapper.getBoundingClientRect().top - self.getBoundingClientRect().top;
     var selfPaddingBottom = parseInt(getStyle(self).paddingBottom) + self.clientTop;
     if (horizontalScrolling == true) {
@@ -176,6 +216,7 @@ Element.prototype.scrollable = function(settings) {
     
     // -- Create a vertical scroll bar -- //
     var scroller = makeScroller("Y");
+    if (settings.contentResize == true) fixContent();
     // -- Create a horizontal scroll bar -- //
     if (horizontalScrolling == true) var scrollerX = makeScroller("X");
     
@@ -218,6 +259,56 @@ Element.prototype.scrollable = function(settings) {
       }; 
     };
     
+    // -- Function for calculate height or width for sliders  -- //
+    var selfPadding = {
+      top: parseInt(getStyle(self).paddingTop),
+      bottom: parseInt(getStyle(self).paddingBottom),
+      left: parseInt(getStyle(self).paddingLeft),
+      right: parseInt(getStyle(self).paddingRight)
+    };
+    function updateSliderHW(axis) {
+      if (axis == "Y") {
+        if (sliderStarterHeight == "auto") {
+          var selfWrapperRatio;
+          if (horizontalScrolling == true) {
+            if (sliderShift == true) {
+              selfWrapperRatio = self.clientHeight / ((wrapper.offsetHeight + selfPadding.top + selfPadding.bottom + scrollerX.offsetHeight) / 100);
+            } else {
+              selfWrapperRatio = self.clientHeight / ((wrapper.offsetHeight + selfPadding.top + selfPadding.bottom) / 100);
+            };
+          } else {
+            selfWrapperRatio = self.clientHeight / ((wrapper.offsetHeight + selfPadding.top + selfPadding.bottom) / 100);
+          };
+          sliderHeight = sliderFieldHeight / 100 * selfWrapperRatio;
+        } else {
+          sliderHeight = sliderHeight;
+        };
+        if (sliderHeight < sliderHeightMin) {
+          sliderHeight = sliderHeightMin;
+        } else if (sliderHeight >= sliderFieldHeight) {
+          sliderHeight = 0;
+        };
+        slider.style.height = sliderHeight + "px";
+      } else if (axis == "X") {
+        if (sliderStarterWidth == "auto") {
+          if (sliderShift == true) {
+            var selfWrapperRatioX = self.clientWidth / ((wrapper.offsetWidth + selfPadding.left + selfPadding.right + scroller.offsetWidth) / 100);
+          } else {
+            var selfWrapperRatioX = self.clientWidth / ((wrapper.offsetWidth + selfPadding.left + selfPadding.right) / 100);
+          };
+          sliderWidth = sliderFieldXWidth / 100 * selfWrapperRatioX;
+        } else {
+          sliderWidth = sliderWidth;
+        };
+        if (sliderWidth < sliderHeightMin) {
+          sliderWidth = sliderHeightMin;
+        } else if (sliderWidth >= sliderFieldXWidth) {
+          sliderWidth = 0;
+        };
+        sliderX.style.width = sliderWidth + "px";
+      };
+    };
+    
     // -- Function for creation a vertical and horizontal sliders -- //
     function createSlider(axis) {
       var slider = document.createElement('div');
@@ -225,47 +316,25 @@ Element.prototype.scrollable = function(settings) {
         makeByStandart(slider, scroller, "absolute", sliderClass);
         slider.setAttribute('data-type', 'slider')
         slider.style.width = scroller.clientWidth + "px";
-        if (sliderHeight == "auto") {
-          var selfWrapperRatio;
-          if (horizontalScrolling == true) {
-            selfWrapperRatio = self.clientHeight / ((wrapper.offsetHeight + selfPaddingTop + selfPaddingBottom + scrollerX.offsetHeight) / 100);
-          } else {
-            selfWrapperRatio = self.clientHeight / ((wrapper.offsetHeight + selfPaddingTop + selfPaddingBottom) / 100);
-          };
-          sliderHeight = sliderFieldHeight / 100 * selfWrapperRatio;
-          if (sliderHeight < sliderHeightMin) {
-            sliderHeight = sliderHeightMin;
-          };
-        };
-        if (sliderHeight > sliderFieldHeight) {
-          sliderHeight = sliderFieldHeight;
-        };
-        slider.style.height = sliderHeight + "px";
         slider.style.top = topEdge + "px";
       } else if (axis == "X") { // slider for horizontal scroller
         makeByStandart(slider, scrollerX, "absolute", sliderClass);
         slider.setAttribute('data-type', 'sliderX');
         slider.style.height = scrollerX.clientHeight + "px";
-        if (sliderWidth == "auto") {
-          var selfWrapperRatioX = self.clientWidth / (wrapper.offsetWidth / 100);
-          sliderWidth = sliderFieldXWidth / 100 * selfWrapperRatioX;
-          if (sliderWidth < sliderHeightMin) {
-            sliderWidth == sliderHeightMin;
-          }; 
-        };
-        if (sliderWidth > sliderFieldXWidth) {
-          sliderWidth = sliderFieldXWidth;
-        };
-        slider.style.width = sliderWidth + "px";
         slider.style.left = leftEdge + "px";
       };
+      smoothly("set", slider);
       return slider;
     };
     
     // -- Create a vertical slider -- //
     var slider = createSlider("Y");
+    updateSliderHW("Y");
     // -- Create a horizontal slider -- //
-    if (horizontalScrolling == true) var sliderX = createSlider("X");
+    if (horizontalScrolling == true){
+      var sliderX = createSlider("X");
+      updateSliderHW("X");
+    };
     
     // -- Creatr plug in hole between scrollers -- //
     if (horizontalScrolling == true) {
@@ -283,6 +352,8 @@ Element.prototype.scrollable = function(settings) {
     // -- Adding effect of hideable scroll bar -- //
     if (settings.autoHide == true) {
       function adaptiveHide(element, value) {
+        element.style.MozTransition = "opacity, 0.4s";
+        element.style.OTransition = "opacity, 0.4s";
         element.style.WebkitTransition = "opacity, 0.4s";
         element.style.transition = "opacity, 0.4s";
         element.style.MsFilter = "\"progid:DXImageTransform.Microsoft.Alpha(Opacity=" + (value * 100) + ")\"";
@@ -354,17 +425,60 @@ Element.prototype.scrollable = function(settings) {
     };
     
     // -- Ratio factor formula for future calculation -- //
-    var ratioFactor;
-    if (horizontalScrolling == true) {
-      if (sliderShift == true) {
-        ratioFactor = ((wrapper.offsetHeight + selfPaddingTop + selfPaddingBottom + scrollerX.offsetHeight) - (self.offsetHeight + (selfBorder.top - selfBorder.bottom))) / (sliderFieldHeight - sliderHeight);
-        var ratioFactorX = ((wrapper.offsetWidth + selfPaddingLeft + selfPaddingRight + scroller.offsetWidth) - (self.offsetWidth + (selfBorder.left - selfBorder.right))) / (sliderFieldXWidth - sliderWidth);
-      } else {
-        ratioFactor = ((wrapper.offsetHeight + selfPaddingTop + selfPaddingBottom) - (self.offsetHeight + (selfBorder.top - selfBorder.bottom))) / (sliderFieldHeight - sliderHeight);
-        var ratioFactorX = ((wrapper.offsetWidth + selfPaddingLeft + selfPaddingRight) - (self.offsetWidth + (selfBorder.left - selfBorder.right))) / (sliderFieldXWidth - sliderWidth);
+    var ratioFactor = {
+      vertical: 0,
+      horizontal: 0
+    };
+    function calcRatioFactor() {
+      if (horizontalScrolling == true) {
+        if (sliderShift == true) {
+          ratioFactor.vertical = ((wrapper.offsetHeight + selfPaddingTop + selfPaddingBottom + scrollerX.offsetHeight) - (self.offsetHeight + (selfBorder.top - selfBorder.bottom))) / (sliderFieldHeight - sliderHeight);
+          ratioFactor.horizontal = ((wrapper.offsetWidth + selfPaddingLeft + selfPaddingRight + scroller.offsetWidth) - (self.offsetWidth + (selfBorder.left - selfBorder.right))) / (sliderFieldXWidth - sliderWidth);
+        } else {
+          ratioFactor.vertical = ((wrapper.offsetHeight + selfPaddingTop + selfPaddingBottom) - (self.offsetHeight + (selfBorder.top - selfBorder.bottom))) / (sliderFieldHeight - sliderHeight);
+          ratioFactor.horizontal = ((wrapper.offsetWidth + selfPaddingLeft + selfPaddingRight) - (self.offsetWidth + (selfBorder.left - selfBorder.right))) / (sliderFieldXWidth - sliderWidth);
+        };
+      } else  {
+        ratioFactor.vertical = ((wrapper.offsetHeight + selfPaddingTop + selfPaddingBottom) - (self.offsetHeight + (selfBorder.top - selfBorder.bottom))) / (sliderFieldHeight - sliderHeight);
+      };  
+    };
+    calcRatioFactor();
+    
+    // -- Function for autoconfiguration scrollbars if content is dynamic (infinity scroll, for example) -- //
+    if (settings.dynamicContent == true) {
+      function checkContentSize() {
+        var timerContent = setTimeout(function() {
+          if (parseInt(getStyle(wrapper).height) != wrapperHeight) {
+            wrapperHeight = parseInt(getStyle(wrapper).height);
+            updateSliderHW("Y");
+            calcRatioFactor();
+            var checkedSliderTop = (parseInt(getStyle(wrapper).top) / ratioFactor.vertical) * -1;
+            if (arrows == true) {
+              checkedSliderTop += arrowUp.offsetHeight;
+            };
+            slider.style.top = checkedSliderTop + "px";
+          };
+          if (settings.contentResize == true) {
+            fixContent();
+          };
+          if (horizontalScrolling == "auto" || horizontalScrolling == true) {
+            setWrapperWidth();
+            horizontalScrolling = true;
+            if (parseInt(getStyle(wrapper).width) != wrapperWidth) {
+              wrapperWidth = parseInt(getStyle(wrapper).width);
+              updateSliderHW("X");
+              calcRatioFactor();
+              var checkedSliderXLeft = (parseInt(getStyle(wrapper).left) / ratioFactor.horizontal) * -1;
+              if (arrows == true) {
+                checkedSliderXLeft += arrowLeft.offsetWidth;
+              };
+              sliderX.style.left = checkedSliderXLeft + "px";
+            };
+          };
+          checkContentSize();
+        }, 4);
       };
-    } else  {
-      ratioFactor = ((wrapper.offsetHeight + selfPaddingTop + selfPaddingBottom) - (self.offsetHeight + (selfBorder.top - selfBorder.bottom))) / (sliderFieldHeight - sliderHeight);
+      checkContentSize();
     };
     
     // -- Object for detection picked slider -- //
@@ -408,9 +522,12 @@ Element.prototype.scrollable = function(settings) {
         };
         if (axis == "X") {
           sliderPick.sliderX = false;
+          smoothly("set", sliderX);
         } else if (axis == "Y") {
           sliderPick.slider = false;
+          smoothly("set", slider);
         };
+        smoothly("set", wrapper);
       };
       eventListener('add', document, 'mouseup', clearEvent);
     };
@@ -418,6 +535,8 @@ Element.prototype.scrollable = function(settings) {
     // -- Event "Drag'n Drop" for vertical slider -- //
     slider.onmousedown = function(event) {
       event = event || window.event;
+      smoothly("remove", wrapper);
+      smoothly("remove", slider);
       var сorrectPick = event.clientY - slider.getBoundingClientRect().top;
       function sliderScroll(event) {
         var sliderCoordsOld = slider.getBoundingClientRect();
@@ -433,7 +552,7 @@ Element.prototype.scrollable = function(settings) {
         };
         slider.style.top = newTop + "px";
         var sliderCoordsNew = slider.getBoundingClientRect();
-        var scrollSpeed = (sliderCoordsNew.top - sliderCoordsOld.top) * ratioFactor;
+        var scrollSpeed = (sliderCoordsNew.top - sliderCoordsOld.top) * ratioFactor.vertical;
         sliderPick.wrapperY -= scrollSpeed;
         wrapper.style.top = Math.round(sliderPick.wrapperY) + "px";
         if (settings.autoHide == true) {
@@ -456,6 +575,8 @@ Element.prototype.scrollable = function(settings) {
     if (horizontalScrolling == true) {
       sliderX.onmousedown = function(event) {
         event = event || window.event;
+        smoothly("remove", wrapper);
+        smoothly("remove", sliderX);
         var correctPick = event.clientX - sliderX.getBoundingClientRect().left;
         function sliderXScroll(event) {
           var sliderXCoordsOld = sliderX.getBoundingClientRect();
@@ -471,7 +592,7 @@ Element.prototype.scrollable = function(settings) {
           };
           sliderX.style.left = newLeft + "px";
           var sliderXCoordsNew = sliderX.getBoundingClientRect();
-          var scrollXSpeed = (sliderXCoordsNew.left - sliderXCoordsOld.left) * ratioFactorX;
+          var scrollXSpeed = (sliderXCoordsNew.left - sliderXCoordsOld.left) * ratioFactor.horizontal;
           var wrapperPositionXOld = (wrapper.getBoundingClientRect().left - self.getBoundingClientRect().left) - selfPaddingLeft;
           sliderPick.wrapperX -= scrollXSpeed;
           wrapper.style.left = Math.round(sliderPick.wrapperX) + "px";
@@ -495,7 +616,7 @@ Element.prototype.scrollable = function(settings) {
     // -- General function of vertical scrolling action for mouse wheel, keyboard and virtual arrows -- //
     function scrollGeneric(event, scrollStep) {
       sliderPick.wrapperY -= scrollStep;
-      var newSliderTop = (sliderPick.wrapperY / ratioFactor) * -1;
+      var newSliderTop = (sliderPick.wrapperY / ratioFactor.vertical) * -1;
       if (arrows == true) {
         newSliderTop += arrowUp.offsetHeight;
       };
@@ -527,7 +648,7 @@ Element.prototype.scrollable = function(settings) {
     // -- General function of horizontal scrolling action for keyboard and virtual arrows -- //
     function scrollGenericX(event, scrollStep) {
       sliderPick.wrapperX -= scrollStep;
-      var newSliderLeft = (sliderPick.wrapperX / ratioFactorX) * -1;
+      var newSliderLeft = (sliderPick.wrapperX / ratioFactor.horizontal) * -1;
       if (arrows == true) {
         newSliderLeft += arrowLeft.offsetWidth;
       };
@@ -590,17 +711,59 @@ Element.prototype.scrollable = function(settings) {
       onwheelFixer(self, wheelScroll);
     };
     
+    // -- Function, which return transition duration in ms -- //
+    function getTransitionDurationMs() {
+      var durationInSeconds = parseFloat(wrapper.style.transitionDuration) ||
+             parseFloat(wrapper.style.WebkitTransitionDuration) ||
+             parseFloat(wrapper.style.MozTransitionDuration) ||
+             parseFloat(wrapper.style.OTransitionDuration);
+      return durationInSeconds * 1000;
+    };
+    
+    if (settings.smoothlyScroll == true) {
+      var transitionDuration = getTransitionDurationMs();
+      var removeSmoothTimer = "empty";
+    };
+    
+    function smoothActionPack(action) {
+      if (action == "set") {
+        smoothly("set", slider);
+        if (horizontalScrolling == true) smoothly("set", sliderX);
+        smoothly("set", wrapper);
+      } else if (action == "remove") {
+        smoothly("remove", slider);
+        if (horizontalScrolling == true) smoothly("remove", sliderX);
+        smoothly("remove", wrapper);
+      };
+    };
+    
     // -- Event of scrolling by keyboard (wrap event "onkeyboard" in "onfocus" to avoid conflict with native scroller) -- //
     if (settings.useKeyboardScroll == true) {
       self.onfocus = function(event) {
         self.onkeydown = function(event) {
           event = event || window.event;
           
+          function freezTransition(axis) {
+            if (settings.smoothlyScroll == true) {
+              if (removeSmoothTimer == "empty") {
+                removeSmoothTimer = setTimeout(function() {
+                  if (axis == "Y") {
+                    smoothly("remove", slider);  
+                  } else if (axis == "X") {
+                    smoothly("remove", sliderX);
+                  };
+                  smoothly("remove", wrapper);
+                }, transitionDuration);
+              };
+            };
+          };
+          
           // -- Vertical scrolling -- //
           function keyboardScroll(event, arrowBtnCode, pageBtnCode, positivity) {
             var scrollStep = 0;
             if (event.keyCode == arrowBtnCode) {
               scrollStep = stepMultipler * positivity;
+              freezTransition("Y");
             } else if (event.keyCode == pageBtnCode) {
               if (horizontalScrolling == true) {
                 scrollStep = (self.clientHeight - scrollerX.offsetHeight) * positivity;
@@ -628,6 +791,7 @@ Element.prototype.scrollable = function(settings) {
               var scrollStep = 0;
               if (event.keyCode == arrowBtnCode) {
                 scrollStep = stepMultipler * positivity;
+                freezTransition("X");
               } else if (event.keyCode == pageBtnCode) {
                 scrollStep = (self.clientWidth - scroller.offsetWidth) * positivity;
               };
@@ -643,6 +807,14 @@ Element.prototype.scrollable = function(settings) {
             // condition for bottons "Arrow right" and "End"
             if (event.keyCode == 39 || event.keyCode == 35) {
               keyboardScrollX(event, 39, 35, 1);
+            };
+          };
+          
+          if (settings.smoothlyScroll == true) {
+            self.onkeyup = function() {
+              clearTimeout(removeSmoothTimer);
+              removeSmoothTimer = "empty";
+              smoothActionPack("set");
             };
           };
         };
@@ -662,6 +834,7 @@ Element.prototype.scrollable = function(settings) {
           if (scroller.contains(target)) return;
           if (sliderPick.slider != false) return;
         };
+        smoothActionPack("remove");
         
         // -- Vertical scrolling -- //
         function selectionScroll(event) {
@@ -679,6 +852,7 @@ Element.prototype.scrollable = function(settings) {
         eventListener('add', document, 'mousemove', selectionScroll);
         eventListener('add', document, 'mouseup', function(event) {
           eventListener('remove', document, 'mousemove', selectionScroll);
+          smoothActionPack("set");
         });
         
         // -- Horizontal scrolling -- //
@@ -698,6 +872,7 @@ Element.prototype.scrollable = function(settings) {
           eventListener('add', document, 'mousemove', selectionScrollX);
           eventListener('add', document, 'mouseup', function(event) {
             eventListener('remove', document, 'mousemove', selectionScrollX);
+            smoothActionPack("set");
           });
         };
       };
@@ -748,6 +923,7 @@ Element.prototype.scrollable = function(settings) {
       
       function loopedMouseGeneric(positivity, type) {
         var looper = setTimeout(function() {
+          smoothActionPack("remove");
           function repeatAgain() {
             if (loops.repeat == true) {
               var repeater = setTimeout(function() {
@@ -757,7 +933,7 @@ Element.prototype.scrollable = function(settings) {
                   mouseGenericX(positivity, type);
                 };
                 repeatAgain();
-              }, 50);
+              }, 30);
             };
           };
           repeatAgain();
@@ -818,6 +994,7 @@ Element.prototype.scrollable = function(settings) {
       if (loops.looper != undefined) {
         clearTimeout(loops.looper);
         loops.repeat = false;
+        smoothActionPack("set");
       };
     };
     eventListener('add', scroller, 'mousedown', virtualScrolling);
