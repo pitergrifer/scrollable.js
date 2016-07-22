@@ -9,13 +9,7 @@ customize the behavior to fit your needs and preferences.
 
 ## Usege
 <ol start="1">
-<li>First you need pick <strong>HTML element</strong>, which you want add a scroller (for example i use pick by ID):</li>
-</ol>
-```javascript
-   var container = document.getElementById('container');
-```
-<ol start="2">
-<li>Create <strong>CSS rules</strong> for scroller, arrows (if you want) and slider (some css-rules will be redefined by plugin logic):</li>
+<li>One, create <strong>CSS rules</strong> for scroller, arrows (if you want) and slider (some css-rules will be redefined by plugin logic):</li>
 </ol>
 ```css
    #container {
@@ -100,6 +94,12 @@ customize the behavior to fit your needs and preferences.
    }
 ```
 </ol>
+<ol start="2">
+<li>After that, you need pick <strong>HTML element</strong>, which you want add a scroller (for example i use pick by ID):</li>
+</ol>
+```javascript
+   var container = document.getElementById('container');
+```
 <ol start="3">
 <li>Then you must <strong>set methood .scrollable()</strong> to containter and produce scroller setting:
 <ul>
@@ -117,10 +117,14 @@ customize the behavior to fit your needs and preferences.
 <li><strong>"scrollBySelection"</strong> - ability to scroll by text selection. Flags: "true", "false". Necessary setting;</li>
 <li><strong>"useWheelScroll"</strong> - ability to scroll by mouse wheel. Flags: "true", "false". Necessary setting;</li>
 <li><strong>"useKeyboardScroll"</strong> - ability to scroll by keyboard buttons as "Arrows", "PageUp", "PageDown", "Home" and "End". Flags: "true", "false". Necessary setting;</li>
+<li><strong>"dynamicContent"</strong> - this option configurate slider size and some calculation, if content has variable filling (like in case of infinity scrolling). Flags: "true", "false". Necessary setting;</li>
+<li><strong>"contentResize"</strong> - if content width larger, then container, this option shrink this type of content, and delete horizontal scrollbar. Flags: "true", "false". Necessary setting;</li>
 <li><strong>"autoHide"</strong> - existence of visual effect of hideable scroller. Flags: "true", "false". Necessary setting;</li>
 <li><strong>"scrollerOpacityActive"</strong> - value opacity for active scroller. Flag: number. Not necessary setting, if you don't use auto hide effect;</li>
 <li><strong>"scrollerOpacityPassive"</strong> - value opacity for passive scroller. Flag: number. Not necessary setting, if you don't use auto hide effect;</li>
 <li><strong>"scrollerOpacityHidden"</strong> - value opacity for hidden scroller. Flag: number. Not necessary setting, if you don't use auto hide effect;</li>
+<li><strong>"smoothlyScroll"</strong> - adding effect of smoothness at scrolling. Flags: "true", "false". Necessary setting;</li>
+<li><strong>"smoothlyScrollOptions"</strong> - configurate css-transition property. Flag: string. Not necessary setting, if you don't use effect of smoothness;</li>
 </ul>
 <strong>Example:</strong>
 </ol></li>
