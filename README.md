@@ -149,9 +149,13 @@ customize the behavior to fit your needs and preferences.
       scrollBySelection: true,
       useWheelScroll: true,
       useKeyboardScroll: true,
+      dynamicContent: true,
+      contentResize: false,
       autoHide: true,
       scrollerOpacityActive: 1,
       scrollerOpacityPassive: 0.6,
-      scrollerOpacityHidden: 0.4
+      scrollerOpacityHidden: 0.4,
+      smoothlyScroll: true,
+      smoothlyScrollOptions: "0.3s all"
    });
 ```
