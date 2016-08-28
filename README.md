@@ -6,7 +6,7 @@ New methood obj.scrollable() can generate custom scrollbar on HTML element.
 With scrollable.js you can use you own scrolle, which you can stylezed and
 customize the behavior to fit your needs and preferences.
 
-## Usege
+## Usage
 <ol start="1">
 <li>One, create <strong>CSS rules</strong> for scroller, arrows (if you want) and slider (some css-rules will be redefined by plugin logic):</li>
 </ol>
