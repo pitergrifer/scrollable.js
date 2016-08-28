@@ -1,4 +1,3 @@
-
 # scrollable.js by Bogdan Danileichenko (@piter_grifer)
 
 ## About
@@ -102,60 +101,79 @@ customize the behavior to fit your needs and preferences.
 ```
 <ol start="3">
 <li>Then you must <strong>set methood .scrollable()</strong> to containter and produce scroller setting:
-<ul>
-<li><strong>"scrollerClass"</strong> - CSS-class of vertical scroller. Also, this class use in horizontal scroll bar as main. Necessary setting;</li>
-<li><strong>"horizontalScrolling"</strong> - horizontal scrolling presence. Flags: "true", "false" or "auto". In "auto" flag horizontal scrolling avalible only if content width larger, then width of container;</li>
-<li><strong>"scrollerXClass"</strong> - CSS-class of horizontal scroller. This class may only adjust a main "scrollerClass". Not necessary setting, if you don't use horizontal scrolling;</li>
-<li><strong>"arrows"</strong> - arrows presence. Flags: "true", "false". Necessary setting;</li>
-<li><strong>"arrowsClass"</strong> - CSS-class of arrows. Not necessary setting, if you don't use arrows;</li>
-<li><strong>"arrowChevron"</strong> - Object with HTML code for arrows chevrons. Keys: "top", "bottom", "left", "right" for top, bottom, left and right arrows respectively. Not necessary setting, if you don't use arrows;</li>
-<li><strong>"sliderClass"</strong> - CSS-class of slider. Necessary setting;</li>
-<li><strong>sliderHeight</strong> - height of slider. Flags: "auto" - calculated based on content; number (without adding "px" or "%") - height in pixels. Necessary setting;</li>
-<li><strong>"sliderHeightMin"</strong> - minimal height of slider. Flag: number (without adding "px" or "%"). Necessary setting;</li>
-<li><strong>"sliderShift"</strong> - adding shift to content for scroller. Flags: "true", "false". Necessary setting;</li>
-<li><strong>"stepMultipler"</strong> - speed of scrolling. Flag: number. Necessary setting;</li>
-<li><strong>"scrollBySelection"</strong> - ability to scroll by text selection. Flags: "true", "false". Necessary setting;</li>
-<li><strong>"useWheelScroll"</strong> - ability to scroll by mouse wheel. Flags: "true", "false". Necessary setting;</li>
-<li><strong>"useKeyboardScroll"</strong> - ability to scroll by keyboard buttons as "Arrows", "PageUp", "PageDown", "Home" and "End". Flags: "true", "false". Necessary setting;</li>
-<li><strong>"dynamicContent"</strong> - this option configurate slider size and some calculation, if content has variable filling (like in case of infinity scrolling). Flags: "true", "false". Necessary setting;</li>
-<li><strong>"contentResize"</strong> - if content width larger, then container, this option shrink this type of content, and delete horizontal scrollbar (if it allowed). Flags: "true", "false". Necessary setting;</li>
-<li><strong>"autoHide"</strong> - existence of visual effect of hideable scroller. Flags: "true", "false". Necessary setting;</li>
-<li><strong>"scrollerOpacityActive"</strong> - value opacity for active scroller. Flag: number. Not necessary setting, if you don't use auto hide effect;</li>
-<li><strong>"scrollerOpacityPassive"</strong> - value opacity for passive scroller. Flag: number. Not necessary setting, if you don't use auto hide effect;</li>
-<li><strong>"scrollerOpacityHidden"</strong> - value opacity for hidden scroller. Flag: number. Not necessary setting, if you don't use auto hide effect;</li>
-<li><strong>"smoothlyScroll"</strong> - adding effect of smoothness at scrolling. Flags: "true", "false". Necessary setting;</li>
-<li><strong>"smoothlyScrollOptions"</strong> - configurate css-transition property. Flag: string. Not necessary setting, if you don't use effect of smoothness;</li>
-</ul>
-<strong>Example:</strong>
+
+Option | Description | Default | Necessity
+:---: | :--- | :---: | :---:
+verticalScroller | Vertical scroller exisence. Flags: "true" (bool), "false" (bool) or "auto" (string). In "auto" flag vertical scroller created only, if content height larger, then height of container. | true | No
+scrollerYClass | CSS-class of vertical scroller. |  | Yes, if you use vertical scroller
+horizontalScroller | Horizontal scroller exisence. Flags: "true" (bool), "false" (bool) or "auto" (string). In "auto" flag horizontal scroller created only, if content width larger, then width of container. | true | No
+scrollerXClass | CSS-class of horizontal scroller. |  | Yes, if you use horizontal scroller
+scrollerShift | Push content to the side of the scroller. Flags: "true" (bool), "false" (bool). | true | No
+arrows | Arrows presence. Flags: "true" (bool), "false" (bool). | true | No
+arrowsClass | CSS-class of arrows. |  | Yes, if you use arrows
+arrowChevron | Object with HTML code for arrows chevrons. Keys: "top", "bottom", "left", "right" for top, bottom, left and right arrows respectively. |  | Yes, if you use arrows
+sliderClass | CSS-class of sliders. |  | Yes
+sliderSize | Define sliders sizes. Flags: "auto" (string) - calculated based on content size; number (int) (without adding "px" or "%") - height in pixels. | "auto" | No
+sliderSizeMin | Minimal size of sliders. Flag: number (int) (without adding "px" or "%"). | 15 | No
+stepMultipler | Speed of scrolling. Flag: number (int) | 15 | No
+scrollBySelection | Ability to scroll by text selection. Flags: "true" (bool), "false" (bool). | true | No 
+useWheelScroll | Ability to scroll by mouse wheel. Flags: "true" (bool), "false" (bool). | true | No
+useKeyboardScroll | Ability to scroll by keyboard buttons as "Arrows", "PageUp", "PageDown", "Home" and "End". Flags: "true" (bool), "false" (bool). | true | No
+dynamicContent | This option configurate slider size and do some calculations, if content has variable filling (like in case of infinity scrolling). Flags: "true" (bool), "false" (bool). | false | No
+autoHide | Existence of visual effect of hideable scroller. Flags: "true" (bool), "false" (bool). | true | No
+scrollerOpacityActive | Value opacity for active scroller condition. Flag: number. | 1 | No
+scrollerOpacityPassive | Value opacity for passive scroller condition. Flag: number. | 0.5 | No
+scrollerOpacityHidden | Value opacity for Hidden scroller condition. Flag: number. | 0.2 | No
+smoothlyScroll | Adding effect of smoothness at scrolling. Flags: "true" (bool), "false" (bool). | false | No
+smoothlyScrollOptions | Configurate css-transition property. Flag: string. | "0.3s top, 0.3s left" | No
+
 </ol></li>
+
+<strong>Example 1 (full setting):</strong>
 ```javascript   
    container.scrollable({
-      scrollerClass: "scroller-field",
-      horizontalScrolling: "auto",
-      scrollerXClass: "scroller-x-field",
-      arrows: true,
-      arrowsClass: "scroller-arrows",
-      arrowChevron: {
-        top: "<div class=\"arrow-chevron-top\"></div>",
-        bottom: "<div class=\"arrow-chevron-bottom\"></div>",
-        left: "<div class=\"arrow-chevron-left\"></div>",
-        right: "<div class=\"arrow-chevron-right\"></div>"
-      },
-      sliderClass: "scroller-slider",
-      sliderHeight: "auto",
-      sliderHeightMin: 30,
-      sliderShift: true,
-      stepMultipler: 10,
-      scrollBySelection: true,
-      useWheelScroll: true,
-      useKeyboardScroll: true,
-      dynamicContent: true,
-      contentResize: false,
-      autoHide: true,
-      scrollerOpacityActive: 1,
-      scrollerOpacityPassive: 0.6,
-      scrollerOpacityHidden: 0.4,
-      smoothlyScroll: true,
-      smoothlyScrollOptions: "0.3s all"
+     verticalScroller: "auto",
+     scrollerYClass: "scroller-y-field",
+     horizontalScroller: "auto",
+     scrollerXClass: "scroller-x-field",
+     scrollerShift: true,
+     arrows: true,
+     arrowsClass: "scroller-arrows",
+     arrowChevron: {
+       top: "<div class=\"arrow-chevron-top\"></div>",
+       bottom: "<div class=\"arrow-chevron-bottom\"></div>",
+       left: "<div class=\"arrow-chevron-left\"></div>",
+       right: "<div class=\"arrow-chevron-right\"></div>"
+     },
+     sliderClass: "scroller-slider",
+     sliderSize: "auto",
+     sliderSizeMin: 30,
+     stepMultipler: 15,
+     scrollBySelection: true,
+     useWheelScroll: true,
+     useKeyboardScroll: true,
+     dynamicContent: true,
+     autoHide: true,
+     scrollerOpacityActive: 1,
+     scrollerOpacityPassive: 0.5,
+     scrollerOpacityHidden: 0.2,
+     smoothlyScroll: true,
+     smoothlyScrollOptions: "0.3s top, 0.3s left"
+   });
+```
+
+<strong>Example 2 (quick setup):</strong>
+```javascript   
+   container.scrollable({
+     scrollerYClass: "scroller-y-field",
+     scrollerXClass: "scroller-x-field",
+     arrowsClass: "scroller-arrows",
+     arrowChevron: {
+       top: "<div class=\"arrow-chevron-top\"></div>",
+       bottom: "<div class=\"arrow-chevron-bottom\"></div>",
+       left: "<div class=\"arrow-chevron-left\"></div>",
+       right: "<div class=\"arrow-chevron-right\"></div>"
+     },
+     sliderClass: "scroller-slider"
    });
 ```
